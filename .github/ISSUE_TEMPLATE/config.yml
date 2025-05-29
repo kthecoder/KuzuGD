@@ -1,0 +1,10 @@
+blank_issues_enabled: false
+
+contact_links:
+  - name: KuzuGD Proposals
+    url: https://github.com/kthecoder/KuzuGD
+    about: Please submit feature proposals on the Godot proposals repository, not here.
+
+  - name: KuzuGD Community Channels
+    url: https://aveyrin.com/discord
+    about: Please ask for technical support in , not here.
