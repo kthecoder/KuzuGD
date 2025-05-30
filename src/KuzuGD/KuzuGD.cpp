@@ -123,15 +123,14 @@ Array KuzuGD::get_config() const {
 ******************************************************************/
 
 bool KuzuGD::kuzu_init(const String database_path) {
-	UtilityFunctions::print("Kuzu Init Start");
 	if (database_path.is_empty()) {
-		UtilityFunctions::print("Error: Database path is empty!");
+		UtilityFunctions::push_error("KuzuGD Error | Database path is empty");
 		return false;
 	}
 
 	myKuzuDB = (kuzu_database *)malloc(sizeof(kuzu_database));
 	if (!myKuzuDB) {
-		UtilityFunctions::print("Error: Memory allocation failed for KuzuDB!");
+		UtilityFunctions::push_error("KuzuGD Error | Memory allocation failed for KuzuDB Init");
 		return false;
 	}
 	myKuzuDB->_database = nullptr;
@@ -148,7 +147,7 @@ bool KuzuGD::kuzu_init(const String database_path) {
 bool KuzuGD::kuzu_connect(int num_threads) {
 	dbConnection = (kuzu_connection *)malloc(sizeof(kuzu_connection));
 	if (!dbConnection) {
-		UtilityFunctions::print("Error: Memory allocation failed for KuzuDB Connection!");
+		UtilityFunctions::push_error("KuzuGD Error | Memory allocation failed for KuzuDB Connect");
 		return false;
 	}
 	memset(dbConnection, 0, sizeof(kuzu_connection));
@@ -176,13 +175,13 @@ bool KuzuGD::connection_set_max_threads(int num_threads) {
 }
 
 int KuzuGD::connection_get_max_threads() {
-	uint64_t *result = nullptr;
+	uint64_t result = 0;
 	kuzu_state state = kuzu_connection_get_max_num_thread_for_exec(
 			dbConnection,
-			result);
+			&result);
 
 	if (state == KuzuSuccess) {
-		return static_cast<int>(*result);
+		return static_cast<int>(result);
 	} else {
 		return -1;
 	}
@@ -199,68 +198,66 @@ int KuzuGD::connection_get_max_threads() {
 ******************************************************************/
 
 Array KuzuGD::execute_query(const String &query) {
-	kuzu_query_result *result = nullptr;
-	kuzu_state state = kuzu_connection_query(dbConnection, query.utf8().get_data(), result);
+	kuzu_query_result result;
+	kuzu_state state = kuzu_connection_query(dbConnection, query.utf8().get_data(), &result);
 
-	if (state != KuzuSuccess || !result) {
+	if (state != KuzuSuccess || !&result) {
 		return Array();
 	}
 
 	Array result_array;
 
-	while (true) { // Instead of checking `has_next()`, we retrieve directly
-		kuzu_flat_tuple *row = nullptr;
-		if (kuzu_query_result_get_next(result, row) != KuzuSuccess || !row) {
+	while (true) {
+		kuzu_flat_tuple row;
+		if (kuzu_query_result_get_next(&result, &row) != KuzuSuccess || !&row) {
 			break;
 		}
 
 		Dictionary row_dict;
 
-		for (uint32_t i = 0; i < kuzu_query_result_get_num_columns(result); i++) {
-			// Fix column name retrieval using an output parameter
+		for (uint32_t i = 0; i < kuzu_query_result_get_num_columns(&result); i++) {
 			char *column_name;
-			if (kuzu_query_result_get_column_name(result, i, &column_name) == KuzuSuccess) {
-				// Fix value retrieval using an output parameter
-				kuzu_value *value = nullptr;
-				if (kuzu_flat_tuple_get_value(row, i, value) == KuzuSuccess) {
-					row_dict[String(column_name)] = kuzu_value_to_string(value);
+			if (kuzu_query_result_get_column_name(&result, i, &column_name) == KuzuSuccess) {
+				kuzu_value value;
+				if (kuzu_flat_tuple_get_value(&row, i, &value) == KuzuSuccess) {
+					row_dict[String(column_name)] = kuzu_value_to_string(&value);
 				}
 			}
 		}
 
-		result_array.append(row_dict); // Store row dictionary directly in the array
+		result_array.append(row_dict);
 	}
 
 	return result_array;
 }
 
-Array KuzuGD::execute_prepared_query(const godot::String &query, const godot::Dictionary &params) {
-	kuzu_prepared_statement *stmt = nullptr;
-	if (kuzu_connection_prepare(dbConnection, query.utf8().get_data(), stmt) != KuzuSuccess) {
-		return godot::Array(); // Return empty array if preparation fails
+Array KuzuGD::execute_prepared_query(const String &query, const Dictionary &params) {
+	kuzu_prepared_statement stmt;
+	if (kuzu_connection_prepare(dbConnection, query.utf8().get_data(), &stmt) != KuzuSuccess) {
+		return Array(); // Return empty array if preparation fails
 	}
 
 	// Bind parameters
 	for (int i = 0; i < params.size(); i++) {
-		godot::String key = params.keys()[i];
-		godot::Variant value = params.values()[i];
+		String key = params.keys()[i];
+		Variant value = params.values()[i];
 
 		// Godot does not support the same types as Kuzu
 		switch (value.get_type()) {
-			case godot::Variant::INT: {
-				kuzu_prepared_statement_bind_int64(stmt, key.utf8().get_data(), value.operator int64_t());
+			case Variant::INT: {
+				kuzu_prepared_statement_bind_int64(&stmt, key.utf8().get_data(), value.operator int64_t());
 				break;
 			}
 
-			case godot::Variant::STRING: {
-				string string_value = value.operator godot::String().utf8().get_data();
+			case Variant::STRING: {
+				string string_value = value.operator String().utf8().get_data();
 
 				if (is_date(string_value)) {
 					kuzu_date_t *kuzuDate = nullptr;
 
 					kuzu_date_from_string(string_value.c_str(), kuzuDate);
 					kuzu_prepared_statement_bind_date(
-							stmt, key.utf8().get_data(),
+							&stmt, key.utf8().get_data(),
 							*kuzuDate);
 				}
 
@@ -274,7 +271,7 @@ Array KuzuGD::execute_prepared_query(const godot::String &query, const godot::Di
 
 					if (state == KuzuSuccess) {
 						kuzu_prepared_statement_bind_timestamp_tz(
-								stmt, key.utf8().get_data(),
+								&stmt, key.utf8().get_data(),
 								kuzu_ts);
 					} else {
 						UtilityFunctions::print("TimeStamp Format is not a Time Zone");
@@ -290,7 +287,7 @@ Array KuzuGD::execute_prepared_query(const godot::String &query, const godot::Di
 
 					if (state == KuzuSuccess) {
 						kuzu_prepared_statement_bind_timestamp(
-								stmt, key.utf8().get_data(),
+								&stmt, key.utf8().get_data(),
 								kuzu_ts);
 					} else {
 						UtilityFunctions::print("TimeStamp Format is not a Time Zone");
@@ -299,53 +296,53 @@ Array KuzuGD::execute_prepared_query(const godot::String &query, const godot::Di
 
 				else if (is_interval(string_value)) {
 					kuzu_prepared_statement_bind_interval(
-							stmt, key.utf8().get_data(),
+							&stmt, key.utf8().get_data(),
 							string_to_kuzu_interval(string_value));
 				}
 
 				else {
-					kuzu_prepared_statement_bind_string(stmt, key.utf8().get_data(), string_value.c_str());
+					kuzu_prepared_statement_bind_string(&stmt, key.utf8().get_data(), string_value.c_str());
 				}
 
 				break;
 			}
 
-			case godot::Variant::BOOL: {
-				kuzu_prepared_statement_bind_bool(stmt, key.utf8().get_data(), value.operator bool());
+			case Variant::BOOL: {
+				kuzu_prepared_statement_bind_bool(&stmt, key.utf8().get_data(), value.operator bool());
 				break;
 			}
 
-			case godot::Variant::FLOAT: {
-				kuzu_prepared_statement_bind_float(stmt, key.utf8().get_data(), value.operator float());
+			case Variant::FLOAT: {
+				kuzu_prepared_statement_bind_float(&stmt, key.utf8().get_data(), value.operator float());
 				break;
 			}
 
 			default:
-				UtilityFunctions::print("Unsupported data type for binding: " + key);
+				UtilityFunctions::push_error("KuzuGD Error | Prepared Query - Unsupported data type for binding: " + key);
 		}
 	}
 
 	// Execute the query
-	kuzu_query_result *result = nullptr;
-	if (kuzu_connection_execute(dbConnection, stmt, result) != KuzuSuccess) {
-		return godot::Array(); // Return empty array if execution fails
+	kuzu_query_result result;
+	if (kuzu_connection_execute(dbConnection, &stmt, &result) != KuzuSuccess) {
+		return Array(); // Return empty array if execution fails
 	}
 
 	// Process result
-	godot::Array result_array;
+	Array result_array;
 	while (true) {
-		kuzu_flat_tuple *row = nullptr;
-		if (kuzu_query_result_get_next(result, row) != KuzuSuccess || row == nullptr) {
+		kuzu_flat_tuple row;
+		if (kuzu_query_result_get_next(&result, &row) != KuzuSuccess || &row == nullptr) {
 			break;
 		}
 
-		godot::Dictionary row_dict;
-		for (uint32_t i = 0; i < kuzu_query_result_get_num_columns(result); i++) {
+		Dictionary row_dict;
+		for (uint32_t i = 0; i < kuzu_query_result_get_num_columns(&result); i++) {
 			char *column_name;
-			if (kuzu_query_result_get_column_name(result, i, &column_name) == KuzuSuccess) {
-				kuzu_value *value = nullptr;
-				if (kuzu_flat_tuple_get_value(row, i, value) == KuzuSuccess) {
-					row_dict[String(column_name)] = kuzu_value_to_string(value);
+			if (kuzu_query_result_get_column_name(&result, i, &column_name) == KuzuSuccess) {
+				kuzu_value value;
+				if (kuzu_flat_tuple_get_value(&row, i, &value) == KuzuSuccess) {
+					row_dict[String(column_name)] = kuzu_value_to_string(&value);
 				}
 			}
 		}
