@@ -20,12 +20,35 @@ func _ready():
 	else:
 		print("Failed to create a connection to the database.");
 
+	#
+	# Validate Simple queries
+	# 		Queries that are a single text string
+	#
+
 	myKuzuDB.execute_query("CREATE NODE TABLE person(name STRING, age INT64, PRIMARY KEY(name));");
 	myKuzuDB.execute_query("CREATE (:person {name: 'Alice', age: 30});");
 	myKuzuDB.execute_query("CREATE (:person {name: 'Bob', age: 40});");
 	
 	var queryResult : Array = myKuzuDB.execute_query("MATCH (p:person) RETURN p.*");
 	print(queryResult);
+
+	#
+	#
+	# Validate Prepared Queries
+	#
+	#
+
+	myKuzuDB.execute_query("CREATE (:person {name: 'Jake', age: 16});");
+	myKuzuDB.execute_query("CREATE (:person {name: 'Jessica', age: 25});");
+	myKuzuDB.execute_query("CREATE (:person {name: 'Joanna', age: 31});");
+
+	var min_age : int = 18
+	var max_age : int = 30
+
+	var preparedResult : Array = myKuzuDB.execute_prepared_query("MATCH (p:Person) WHERE p.age > $min_age and p.age < $max_age RETURN p.name", {"min_age": min_age, "max_age": max_age});
+
+	print(preparedResult);
+
 
 
 	
