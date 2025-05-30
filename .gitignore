@@ -2,6 +2,10 @@
 *.gen.*
 .godot/
 
+#Database
+demo/data/database/kuzu_db/*
+demo/data/database/kuzu_db/*.wal
+
 # Ignore library files but not the gdextension file
 demo/bin/*
 !demo/bin/android

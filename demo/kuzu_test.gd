@@ -20,4 +20,12 @@ func _ready():
 	else:
 		print("Failed to create a connection to the database.");
 
+	myKuzuDB.execute_query("CREATE NODE TABLE person(name STRING, age INT64, PRIMARY KEY(name));");
+	myKuzuDB.execute_query("CREATE (:person {name: 'Alice', age: 30});");
+	myKuzuDB.execute_query("CREATE (:person {name: 'Bob', age: 40});");
+	
+	var queryResult : Array = myKuzuDB.execute_query("MATCH (p:person) RETURN p.*");
+	print(queryResult);
+
+
 	
