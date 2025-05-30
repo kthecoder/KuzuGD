@@ -5,7 +5,8 @@ var myKuzuDB : KuzuGD = KuzuGD.new();
 func _ready():
 	print("Starting Database Test");
 	
-	var success_db = myKuzuDB.kuzu_init("res://my_database.kuzu");
+	var db_path = ProjectSettings.globalize_path("res://data/database/kuzu_db");
+	var success_db = myKuzuDB.kuzu_init(db_path);
 
 	if success_db:
 		print("Database initialized successfully!");

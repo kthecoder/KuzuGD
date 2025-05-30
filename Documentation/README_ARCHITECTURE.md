@@ -10,7 +10,22 @@ Requires a C++ compiler such as MSVC or MSY2
 
 1. `scons use_mingw=yes` or just `scons`
 
-## Debugging:
+## Debugging Godot Console
+
+1. Execute the Project from the Command Line
+   1. `C:\<path to Godot>\Godot 4.4.1>Godot_v4.4.1-stable_win64_console.exe --debug --path C:\<path to project>\KuzuGD\demo`
+
+## Debugging Linux (WSL)
+
+1. Build for Linux
+   1. `scons target=linux debug_symbols=yes`
+1. Run Godot Demo Project with Debugger
+   1. `gdb --args ./Godot_v4.4.1-stable_linux.x86_64 --path /<path to >/KuzuGD/demo/`
+1. Memory Issues run Valgrind
+   1. `valgrind --tool=memcheck --track-origins=yes ./Godot_v4.4.1-stable_linux.x86_64 --path /mnt/<path to>/KuzuGD/demo`
+   1. `valgrind --tool=memcheck --track-origins=yes --show-leak-kinds=all ./Godot_v4.4.1-stable_linux.x86_64 --path /mnt/<path to>/KuzuGD/demo | grep libkuzu`
+
+## Debugging Windows
 
 1. https://youtu.be/8WSIMTJWCBk?t=3624
 1. `scons target=template_debug debug_symbols=yes`

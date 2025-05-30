@@ -14,4 +14,4 @@ config/name="KuzuGD"
 config/tags=PackedStringArray("kuzugd", "open_source", "template")
 run/main_scene="uid://cs6xj3i70yh0f"
 config/features=PackedStringArray("4.4", "Forward Plus")
-config/icon="uid://bogu1oksa2k1g"
+config/icon="uid://bo7n0aejq5hno"

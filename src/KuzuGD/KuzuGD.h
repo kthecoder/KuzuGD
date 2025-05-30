@@ -80,7 +80,7 @@ public:
 	void set_checkpoint_threshold(uint64_t threshold);
 	uint64_t get_checkpoint_threshold() const;
 
-	Array KuzuGD::get_config() const;
+	Array get_config() const;
 
 	/********************************************
 
@@ -89,9 +89,8 @@ public:
 			Init the DB, assume Configuration is Chosen
 
 	********************************************/
-
 	// @return The Success or Failure of the operation
-	bool kuzu_init(const String &database_path);
+	bool kuzu_init(const String database_path);
 	/*
 		Kuzu_Connect :
 			Set's up a connection for Queries to the DB
