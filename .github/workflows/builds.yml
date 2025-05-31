@@ -88,8 +88,8 @@ jobs:
         run: |
           tar -xvzf kuzu_binary.tar.gz -C ${{ github.workspace }}/bin/${{ matrix.target.platform }}/kuzu/
           # Rename only for Linux platforms
-          mv ${{ github.workspace }}/bin/${{ matrix.target.platform }}-${{ matrix.target.arch }}-${{ matrix.float-precision }}-${{ matrix.target-type }}/kuzu/libkuzu.so \
-             ${{ github.workspace }}/bin/${{ matrix.target.platform }}-${{ matrix.target.arch }}-${{ matrix.float-precision }}-${{ matrix.target-type }}/kuzu/libkuzu_${{ matrix.target.arch }}.so
+          mv ${{ github.workspace }}/bin/${{ matrix.target.platform }}/kuzu/libkuzu.so \
+             ${{ github.workspace }}/bin/${{ matrix.target.platform }}/kuzu/libkuzu_${{ matrix.target.arch }}.so
 
       - name: Extract Kuzu Binaries (macOS)
         if: ${{ matrix.target.platform == 'macos' }}
@@ -132,8 +132,7 @@ jobs:
           debug_symbols=${{ matrix.target-type == 'template_debug' && 'yes' || 'no' }} \
           platform=${{ matrix.target.platform }} \
           arch=${{ matrix.target.arch }} \
-          precision=${{ matrix.float-precision }} \
-          build_dir=${{ github.workspace }}/bin/${{ matrix.target.platform }}-${{ matrix.target.arch }}-${{ matrix.float-precision }}-${{ matrix.target-type }}/
+          precision=${{ matrix.float-precision }}
 
       - name: Save .scons_cache
         uses: ./godot-cpp/.github/actions/godot-cache-save

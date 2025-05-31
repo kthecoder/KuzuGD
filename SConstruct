@@ -89,7 +89,7 @@ elif (env["platform"] == 'linux'):
     env.Append(LIBPATH=["bin/linux/kuzu"])
     arch = platform.machine()
 
-    kuzu_generic_name = 'libkuzu.so'
+    kuzu_generic_name = f'libkuzu_{arch}.so'
 
     if arch == "x86_64":
         env.Append(LIBS=["libkuzu_x86_64"])
@@ -101,14 +101,14 @@ elif (env["platform"] == 'linux'):
 elif (env["platform"] == 'macos'):
     env.Append(LIBPATH=["bin/macos/kuzu"])
     env.Append(LIBS=["libkuzu"])
-    kuzu_lib_name = "libkuzu"
+    kuzu_lib_name = "libkuzu.dylib"
 
     kuzu_generic_name = 'libkuzu.dylib'
 
 elif (env["platform"] == 'android'):
     env.Append(LIBPATH=["bin/android/kuzu"])
     env.Append(LIBS=["libkuzu"])
-    kuzu_lib_name = "libkuzu"
+    kuzu_lib_name = "libkuzu.so"
 
     kuzu_generic_name = 'libkuzu.so'
 
@@ -128,7 +128,6 @@ library = env.SharedLibrary(
 copy = env.Install("{}/bin/{}/".format(projectdir, env["platform"]), library)
 
 kuzu_library_path = "bin/{}/kuzu/{}/".format(env['platform'], kuzu_lib_name)
-#kuzu_copy = env.Install("{}/bin/{}/kuzu/".format(projectdir, env["platform"]), kuzu_library_path)
 
 kuzu_copy = env.InstallAs("{}/bin/{}/{}".format(projectdir, env["platform"], kuzu_generic_name), kuzu_library_path)
 
