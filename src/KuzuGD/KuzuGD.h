@@ -84,6 +84,15 @@ public:
 
 	/********************************************
 
+		Management Functions
+
+	********************************************/
+
+	bool query_timeout(int timeout_millis);
+	void interrupt_connection();
+
+	/********************************************
+
 		Initialization
 
 			Init the DB, assume Configuration is Chosen

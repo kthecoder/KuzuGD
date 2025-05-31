@@ -115,6 +115,25 @@ Array KuzuGD::get_config() const {
 /******************************************************************
 
 
+	Management Functions
+
+
+******************************************************************/
+
+// Set the query timeout value in milliseconds for the connection
+bool KuzuGD::query_timeout(int timeout_millis) {
+	return kuzu_connection_set_query_timeout(dbConnection, timeout_millis);
+}
+
+//Interrupt the Current Query Execution
+void KuzuGD::interrupt_connection() {
+	kuzu_connection_interrupt(dbConnection);
+	return;
+}
+
+/******************************************************************
+
+
 	Initialization
 
 		Init the DB, assume Configuration is Chosen
