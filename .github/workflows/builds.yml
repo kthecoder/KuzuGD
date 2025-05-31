@@ -17,7 +17,6 @@ jobs:
             { platform: linux, arch: x86_64, os: ubuntu-22.04 },
             { platform: linux, arch: aarch64, os: ubuntu-22.04 },
             { platform: windows, arch: x86_64, os: windows-latest },
-            { platform: windows, arch: x86_32, os: windows-latest },
             { platform: macos, arch: universal, os: macos-latest },
             # { platform: android, arch: arm64, os: ubuntu-22.04 },
             # { platform: android, arch: arm32, os: ubuntu-22.04 },
@@ -57,22 +56,26 @@ jobs:
 
       # Get the Kuzu Binaries
       - name: Download Kuzu Binaries
+        shell: bash
         run: |
-          case ${{ matrix.target.platform }} in
-          linux)
-              KUZU_URL="https://github.com/kuzudb/kuzu/releases/download/v0.10.0/libkuzu-linux-${{ matrix.target.arch }}.tar.gz"
+          case "${{ matrix.target.platform }}-${{ matrix.target.arch }}" in
+            linux-x86_64)
+              KUZU_URL="https://github.com/kuzudb/kuzu/releases/download/v0.10.0/libkuzu-linux-x86_64.tar.gz"
               ;;
-          windows)
+            linux-aarch64)
+              KUZU_URL="https://github.com/kuzudb/kuzu/releases/download/v0.10.0/libkuzu-linux-aarch64.tar.gz"
+              ;;
+            windows-x86_64)
               KUZU_URL="https://github.com/kuzudb/kuzu/releases/download/v0.10.0/libkuzu-windows-x86_64.zip"
               ;;
-          macos)
+            macos-universal)
               KUZU_URL="https://github.com/kuzudb/kuzu/releases/download/v0.10.0/libkuzu-osx-universal.tar.gz"
               ;;
-          android)
+            android-armv8a)
               KUZU_URL="https://github.com/kuzudb/kuzu/releases/download/v0.10.0/libkuzu-android-armv8a.tar.gz"
               ;;
-          *)
-              echo "Unsupported platform: ${{ matrix.target.platform }}"
+            *)
+              echo "Unsupported platform: ${{ matrix.target.platform }}-${{ matrix.target.arch }}"
               exit 1
               ;;
           esac
@@ -82,10 +85,16 @@ jobs:
       - name: Extract Kuzu Binaries
         run: |
           if [[ "${{ matrix.target.platform }}" == "windows" ]]; then
-          unzip kuzu_binary.tar.gz -d ${{ github.workspace }}/bin/${{ matrix.target.platform }}/kuzu/
+            unzip kuzu_binary.tar.gz -d ${{ github.workspace }}/bin/${{ matrix.target.platform }}/kuzu/
+          else if [[ "${{ matrix.target.platform }}" == "linux" ]]; then
+            tar -xvzf kuzu_binary.tar.gz -C ${{ github.workspace }}/bin/${{ matrix.target.platform }}/kuzu/
+            # Rename only for Linux platforms
+            mv ${{ github.workspace }}/bin/${{ matrix.target.platform }}-${{ matrix.target.arch }}-${{ matrix.float-precision }}-${{ matrix.target-type }}/kuzu/libkuzu.so \
+              ${{ github.workspace }}/bin/${{ matrix.target.platform }}-${{ matrix.target.arch }}-${{ matrix.float-precision }}-${{ matrix.target-type }}/kuzu/libkuzu_${{ matrix.target.arch }}.so
           else
-          tar -xvzf kuzu_binary.tar.gz -C ${{ github.workspace }}/bin/${{ matrix.target.platform }}/kuzu/
+            tar -xvzf kuzu_binary.tar.gz -C ${{ github.workspace }}/bin/${{ matrix.target.platform }}/kuzu/
           fi
+
       - name: Verify Kuzu Binaries
         run: |
           ls -l ${{ github.workspace }}/bin/${{ matrix.target.platform }}/kuzu/
@@ -111,7 +120,6 @@ jobs:
           SCONS_CACHE: ${{ github.workspace }}/.scons-cache/
         run: |
           scons target=${{ matrix.target-type }} \
-          production=${{ matrix.target-type == 'template_release' && 'yes' || 'no' }} \
           debug_symbols=${{ matrix.target-type == 'template_debug' && 'yes' || 'no' }} \
           platform=${{ matrix.target.platform }} \
           arch=${{ matrix.target.arch }} \
