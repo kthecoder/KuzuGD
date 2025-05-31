@@ -87,14 +87,14 @@ if(env["platform"] == 'windows'):
 
 elif (env["platform"] == 'linux'):
     env.Append(LIBPATH=["bin/linux/kuzu"])
-    arch = platform.machine()
+    arch = env["arch"] 
 
     kuzu_generic_name = f'libkuzu_{arch}.so'
 
     if arch == "x86_64":
         env.Append(LIBS=["libkuzu_x86_64"])
         kuzu_lib_name = "libkuzu_x86_64.so"
-    elif arch == "aarch64":
+    if arch == "aarch64":
         env.Append(LIBS=["libkuzu_aarch64"])
         kuzu_lib_name = "libkuzu_aarch64.so"
 
