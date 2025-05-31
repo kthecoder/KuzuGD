@@ -110,7 +110,13 @@ jobs:
         env:
           SCONS_CACHE: ${{ github.workspace }}/.scons-cache/
         run: |
-          scons target=${{ matrix.target-type }} production=${{ matrix.target-type == 'template_release' && 'yes' || 'no' }} debug_symbols=${{ matrix.target-type == 'template_debug' && 'yes' || 'no' }} platform=${{ matrix.target.platform }} arch=${{ matrix.target.arch }} precision=${{ matrix.float-precision }}
+          scons target=${{ matrix.target-type }} \
+          production=${{ matrix.target-type == 'template_release' && 'yes' || 'no' }} \
+          debug_symbols=${{ matrix.target-type == 'template_debug' && 'yes' || 'no' }} \
+          platform=${{ matrix.target.platform }} \
+          arch=${{ matrix.target.arch }} \
+          precision=${{ matrix.float-precision }} \
+          build_dir=${{ github.workspace }}/bin/${{ matrix.target.platform }}-${{ matrix.target.arch }}-${{ matrix.float-precision }}-${{ matrix.target-type }}/
 
       - name: Save .scons_cache
         uses: ./godot-cpp/.github/actions/godot-cache-save
@@ -129,7 +135,7 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: kuzugd-${{ matrix.target.platform }}-${{ matrix.target.arch }}-${{ matrix.float-precision }}-${{ matrix.target-type }}
+          name: kuzugd
           path: |
             ${{ github.workspace }}/bin/**
 

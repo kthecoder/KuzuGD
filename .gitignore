@@ -2,6 +2,10 @@
 *.gen.*
 .godot/
 
+#addon binaries
+addons/KuzuGD/bin/*
+!addons/KuzuGD/bin/.gitkeep
+
 #Database
 demo/data/database/kuzu_db/*
 demo/data/database/kuzu_db/*.wal
