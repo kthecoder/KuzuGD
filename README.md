@@ -1,51 +1,50 @@
+![Banner](Documentation/Assets/banner.jpg)
+
 # Kuzu Godot
 
 **Godot 4.4 is currently used Version**
 
-Bindings for Kuzu in Godot
+Bindings for [Kuzu](https://github.com/kuzudb/kuzu) in [Godot](https://github.com/godotengine/godot)
 
-Embedded property graph database built for speed. Vector search and full-text search built in. Using Graph Query Language of Cypher.
+Embedded property graph database built for speed. Using Graph Query Language of [Cypher](https://opencypher.org/resources/).
 
 # Overview
 
-# Setup
+1. Create an Instance of Kuzu
+1. Set the Database Folder Path
+1. Initialize the Database
+1. Create a Connection to the DB with thread count
 
-## Binaries
+```gdscript
 
-Requires the Kuzu Binaries in the `bin/<platform>/kuzu` folders.
+var myKuzuDB : KuzuGD = KuzuGD.new(); # Instantiate
+var db_path = ProjectSettings.globalize_path("res://data/database/kuzu_db");
+var success_db = myKuzuDB.kuzu_init(db_path); # Set Path
+var success_connect = myKuzuDB.kuzu_connect(1); # Activate Connection
 
-## Windows
-
-1. Setup a C++ Environment
-   1. Possible Setup for VS Code : https://code.visualstudio.com/docs/cpp/config-mingw
-
-Ensure that C++ can run :
-
-```bash
-gcc --version
-g++ --version
-gdb --version
 ```
 
-# Godot
+1. Execute Queries
+1. Define Tables
+1. Write Data
+1. Read Data
 
-## Godot GDExtension
+```gdscript
 
-[This repository uses the Godot quickstart template for GDExtension development with Godot 4.0+.](https://github.com/godotengine/godot-cpp-template)
+# Define Tables
+myKuzuDB.execute_query("CREATE NODE TABLE IF NOT EXISTS person(name STRING, age INT64, PRIMARY KEY(name));");
 
-### Contents
+# Write Data
+myKuzuDB.execute_query("CREATE (:person {name: 'Alice', age: 30});");
 
-- godot-cpp as a submodule (`godot-cpp/`)
-- (`demo/`) Godot 4.4 Project that tests the Extension
-- preconfigured source files for C++ development of the GDExtension (`src/`)
-- setup to automatically generate `.xml` files in a `doc_classes/` directory to be parsed by Godot as [GDExtension built-in documentation](https://docs.godotengine.org/en/stable/tutorials/scripting/gdextension/gdextension_docs_system.html)
+# Read Data
+var queryResult : Array = myKuzuDB.execute_query("MATCH (p:person) RETURN p.*");
+print(queryResult);
 
-## Github
+```
 
-_Currently Commented Out for Base Development_
+# Setup
 
-- GitHub Issues template (`.github/ISSUE_TEMPLATE.yml`)
-- GitHub CI/CD workflows to publish your library packages when creating a release (`.github/workflows/builds.yml`)
+## Building from Source
 
-This repository comes with a GitHub action that builds the GDExtension for cross-platform use. It triggers automatically for each pushed change. You can find and edit it in [builds.yml](.github/workflows/builds.yml).
-After a workflow run is complete, you can find the file `godot-cpp-template.zip` on the `Actions` tab on GitHub.
+Requires the Kuzu Binaries in the `bin/<platform>/kuzu` folders, pythons Scons, Godot, g++ compiler.
