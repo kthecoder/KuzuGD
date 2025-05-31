@@ -15,7 +15,7 @@ jobs:
         # See https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/running-variations-of-jobs-in-a-workflow
         target: [
             { platform: linux, arch: x86_64, os: ubuntu-22.04 },
-            { platform: linux, arch: aarch64, os: ubuntu-22.04 },
+            # { platform: linux, arch: aarch64, os: ubuntu-22.04 },
             { platform: windows, arch: x86_64, os: windows-latest },
             { platform: macos, arch: universal, os: macos-latest },
             # { platform: android, arch: arm64, os: ubuntu-22.04 },

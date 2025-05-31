@@ -80,6 +80,7 @@ kuzu_lib_name = ''
 kuzu_generic_name = ''
 
 if(env["platform"] == 'windows'): 
+    env.Append(LINKFLAGS=["/IGNORE:4099"])
     env.Append(LIBPATH=["bin/windows/kuzu"])
     env.Append(LIBS=["kuzu_shared"])
     kuzu_lib_name = "kuzu_shared.dll"
