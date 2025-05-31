@@ -89,7 +89,12 @@ public:
 	********************************************/
 
 	bool query_timeout(int timeout_millis);
+
 	void interrupt_connection();
+
+	int storage_version();
+
+	String get_kuzu_version();
 
 	/********************************************
 
@@ -122,12 +127,6 @@ public:
 
 	Array execute_query(const String &query);
 
-	/*
-		@param params structure:
-			Dictionary params;
-			params["user_id"] = 42;  // INT
-			params["username"] = "John";  // STRING
-	*/
 	Array execute_prepared_query(const String &query, const Dictionary &params);
 
 	int query_columns_count(const String &query);

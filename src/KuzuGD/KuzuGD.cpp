@@ -131,6 +131,14 @@ void KuzuGD::interrupt_connection() {
 	return;
 }
 
+int KuzuGD::storage_version() {
+	return kuzu_get_storage_version();
+}
+
+String KuzuGD::get_kuzu_version() {
+	return String::utf8(kuzu_get_version());
+}
+
 /******************************************************************
 
 
@@ -885,6 +893,10 @@ void KuzuGD::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("query_timeout", "timeout_millis"), &KuzuGD::query_timeout);
 
 	ClassDB::bind_method(D_METHOD("interrupt_connection"), &KuzuGD::interrupt_connection);
+
+	ClassDB::bind_method(D_METHOD("get_kuzu_version"), &KuzuGD::get_kuzu_version);
+
+	ClassDB::bind_method(D_METHOD("storage_version"), &KuzuGD::storage_version);
 
 	/********************************************
 
