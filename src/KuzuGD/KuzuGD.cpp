@@ -236,6 +236,11 @@ Array KuzuGD::execute_query(const String &query) {
 
 		UtilityFunctions::push_error("KuzuGD ERROR | Query - " + String(error_msg));
 		result_array.append("ERROR: " + String(error_msg));
+
+		//CleanUp
+		kuzu_query_result_destroy(&result);
+		kuzu_destroy_string(error_msg);
+
 		return result_array;
 	}
 
@@ -255,10 +260,14 @@ Array KuzuGD::execute_query(const String &query) {
 					row_dict[String(column_name)] = kuzu_value_to_string(&value);
 				}
 			}
+			kuzu_destroy_string(column_name);
 		}
 
 		result_array.append(row_dict);
 	}
+
+	//Clean Up
+	kuzu_query_result_destroy(&result);
 
 	return result_array;
 }
@@ -267,6 +276,10 @@ Array KuzuGD::execute_prepared_query(const String &query, const Dictionary &para
 	kuzu_prepared_statement stmt;
 	if (kuzu_connection_prepare(dbConnection, query.utf8().get_data(), &stmt) != KuzuSuccess) {
 		UtilityFunctions::push_error("KuzuGD ERROR | Prepared Query - FAILED to prepare query");
+
+		//CleanUp
+		kuzu_prepared_statement_destroy(&stmt);
+
 		return Array();
 	}
 
@@ -402,6 +415,10 @@ Array KuzuGD::execute_prepared_query(const String &query, const Dictionary &para
 
 		result_array.append("ERROR: " + String(error_msg));
 
+		//Cleanup
+		kuzu_query_result_destroy(&result);
+		kuzu_destroy_string(error_msg);
+
 		return Array(); // Return empty array if execution fails
 	}
 
@@ -421,11 +438,283 @@ Array KuzuGD::execute_prepared_query(const String &query, const Dictionary &para
 					row_dict[String(column_name)] = kuzu_value_to_string(&value);
 				}
 			}
+			kuzu_destroy_string(column_name);
 		}
 		result_array.append(row_dict);
 	}
 
+	//Clean Up
+	kuzu_query_result_destroy(&result);
+	kuzu_prepared_statement_destroy(&stmt);
+
 	return result_array;
+}
+
+int KuzuGD::query_columns_count(const String &query) {
+	kuzu_query_result result;
+	kuzu_state state = kuzu_connection_query(dbConnection, query.utf8().get_data(), &result);
+
+	if (state != KuzuSuccess) {
+		char *error_msg = kuzu_query_result_get_error_message(&result);
+
+		UtilityFunctions::push_error("KuzuGD ERROR | Query Columns Count - " + String(error_msg));
+
+		kuzu_query_result_destroy(&result);
+		kuzu_destroy_string(error_msg);
+
+		return -1;
+	}
+
+	int columnCount = kuzu_query_result_get_num_columns(&result);
+
+	//Clean Up
+	kuzu_query_result_destroy(&result);
+
+	return columnCount;
+}
+
+String KuzuGD::query_column_name(const String &query, int colIndex) {
+	kuzu_query_result result;
+	kuzu_state stateSuccess = kuzu_connection_query(dbConnection, query.utf8().get_data(), &result);
+
+	if (stateSuccess != KuzuSuccess) {
+		char *error_msg = kuzu_query_result_get_error_message(&result);
+
+		UtilityFunctions::push_error("KuzuGD ERROR | Query Columns Count - " + String(error_msg));
+
+		kuzu_query_result_destroy(&result);
+		kuzu_destroy_string(error_msg);
+
+		return "UNDEFINED";
+	}
+
+	char **column_name;
+	kuzu_state stateSuccess2 = kuzu_query_result_get_column_name(&result, colIndex, column_name);
+
+	if (stateSuccess2 != KuzuSuccess) {
+		UtilityFunctions::push_error("KuzuGD ERROR | Query Columns Count - Column Name NOT FOUND");
+
+		kuzu_query_result_destroy(&result);
+
+		return "UNDEFINED";
+	}
+
+	String gd_column_name = String::utf8(*column_name);
+
+	//Clean Up
+	kuzu_query_result_destroy(&result);
+	kuzu_destroy_string(*column_name);
+
+	return gd_column_name;
+}
+
+String KuzuGD::query_column_data_type(const String &query, int colIndex) {
+	kuzu_query_result result;
+	kuzu_state stateSuccess = kuzu_connection_query(dbConnection, query.utf8().get_data(), &result);
+
+	if (stateSuccess != KuzuSuccess) {
+		char *error_msg = kuzu_query_result_get_error_message(&result);
+
+		UtilityFunctions::push_error("KuzuGD ERROR | Query Column Data Type - " + String(error_msg));
+
+		kuzu_query_result_destroy(&result);
+		kuzu_destroy_string(error_msg);
+
+		return "UNDEFINED";
+	}
+
+	kuzu_logical_type column_data_type;
+	kuzu_state stateSuccess2 = kuzu_query_result_get_column_data_type(&result, colIndex, &column_data_type);
+
+	if (stateSuccess2 != KuzuSuccess) {
+		UtilityFunctions::push_error("KuzuGD ERROR | Query Column Data Type - Column Name NOT FOUND");
+
+		kuzu_query_result_destroy(&result);
+
+		return "UNDEFINED";
+	}
+
+	String column_type;
+
+	switch (kuzu_data_type_get_id(&column_data_type)) {
+		case KUZU_ANY:
+			column_type = "ANY";
+		case KUZU_NODE:
+			column_type = "NODE";
+		case KUZU_REL:
+			column_type = "REL";
+		case KUZU_RECURSIVE_REL:
+			column_type = "RECURSIVE_REL";
+		case KUZU_SERIAL:
+			column_type = "SERIAL";
+		case KUZU_BOOL:
+			column_type = "BOOL";
+		case KUZU_INT64:
+			column_type = "INT64";
+		case KUZU_INT32:
+			column_type = "INT32";
+		case KUZU_INT16:
+			column_type = "INT16";
+		case KUZU_INT8:
+			column_type = "INT8";
+		case KUZU_UINT64:
+			column_type = "UINT64";
+		case KUZU_UINT32:
+			column_type = "UINT32";
+		case KUZU_UINT16:
+			column_type = "UINT16";
+		case KUZU_UINT8:
+			column_type = "UINT8";
+		case KUZU_INT128:
+			column_type = "INT128";
+		case KUZU_DOUBLE:
+			column_type = "DOUBLE";
+		case KUZU_FLOAT:
+			column_type = "FLOAT";
+		case KUZU_DATE:
+			column_type = "DATE";
+		case KUZU_TIMESTAMP:
+			column_type = "TIMESTAMP";
+		case KUZU_TIMESTAMP_SEC:
+			column_type = "TIMESTAMP_SEC";
+		case KUZU_TIMESTAMP_MS:
+			column_type = "TIMESTAMP_MS";
+		case KUZU_TIMESTAMP_NS:
+			column_type = "TIMESTAMP_NS";
+		case KUZU_TIMESTAMP_TZ:
+			column_type = "TIMESTAMP_TZ";
+		case KUZU_INTERVAL:
+			column_type = "INTERVAL";
+		case KUZU_DECIMAL:
+			column_type = "DECIMAL";
+		case KUZU_INTERNAL_ID:
+			column_type = "INTERNAL_ID";
+		case KUZU_STRING:
+			column_type = "STRING";
+		case KUZU_BLOB:
+			column_type = "BLOB";
+		case KUZU_LIST:
+			column_type = "LIST";
+		case KUZU_ARRAY:
+			column_type = "ARRAY";
+		case KUZU_STRUCT:
+			column_type = "STRUCT";
+		case KUZU_MAP:
+			column_type = "MAP";
+		case KUZU_UNION:
+			column_type = "UNION";
+		case KUZU_POINTER:
+			column_type = "POINTER";
+		case KUZU_UUID:
+			column_type = "UUID";
+		default:
+			column_type = "UNDEFINED";
+	}
+
+	//Clean Up
+	kuzu_query_result_destroy(&result);
+
+	return column_type;
+}
+
+int KuzuGD::query_num_tuples(const String &query) {
+	kuzu_query_result result;
+	kuzu_state stateSuccess = kuzu_connection_query(dbConnection, query.utf8().get_data(), &result);
+
+	if (stateSuccess != KuzuSuccess) {
+		char *error_msg = kuzu_query_result_get_error_message(&result);
+
+		UtilityFunctions::push_error("KuzuGD ERROR | Query Tuple Count - " + String(error_msg));
+
+		//CleanUp
+		kuzu_query_result_destroy(&result);
+		kuzu_destroy_string(error_msg);
+
+		return 0;
+	}
+
+	int tupleCount = kuzu_query_result_get_num_tuples(&result);
+
+	//Clean Up
+	kuzu_query_result_destroy(&result);
+
+	return tupleCount;
+}
+
+float KuzuGD::query_summary_compile_time(const String &query) {
+	kuzu_query_result result;
+	kuzu_query_summary out_query_summary;
+
+	kuzu_state stateSuccess = kuzu_connection_query(dbConnection, query.utf8().get_data(), &result);
+
+	if (stateSuccess != KuzuSuccess) {
+		char *error_msg = kuzu_query_result_get_error_message(&result);
+
+		UtilityFunctions::push_error("KuzuGD ERROR | Query Summary Compile Time - " + String(error_msg));
+
+		//CleanUp
+		kuzu_destroy_string(error_msg);
+		kuzu_query_result_destroy(&result);
+		kuzu_query_summary_destroy(&out_query_summary);
+
+		return 0;
+	}
+
+	kuzu_state stateSuccess2 = kuzu_query_result_get_query_summary(&result, &out_query_summary);
+
+	if (stateSuccess2 != KuzuSuccess) {
+		UtilityFunctions::push_error("KuzuGD ERROR | Query Summary Compile Time - Get Query Summary FAILED");
+
+		//CleanUp
+		kuzu_query_result_destroy(&result);
+		kuzu_query_summary_destroy(&out_query_summary);
+
+		return 0;
+	}
+
+	//Clean Up
+	kuzu_query_result_destroy(&result);
+	kuzu_query_summary_destroy(&out_query_summary);
+
+	return kuzu_query_summary_get_compiling_time(&out_query_summary);
+}
+
+float KuzuGD::query_summary_execution_time(const String &query) {
+	kuzu_query_result result;
+	kuzu_query_summary out_query_summary;
+
+	kuzu_state stateSuccess = kuzu_connection_query(dbConnection, query.utf8().get_data(), &result);
+
+	if (stateSuccess != KuzuSuccess) {
+		char *error_msg = kuzu_query_result_get_error_message(&result);
+
+		UtilityFunctions::push_error("KuzuGD ERROR | Query Summary Execution Time - " + String(error_msg));
+
+		//CleanUp
+		kuzu_destroy_string(error_msg);
+		kuzu_query_result_destroy(&result);
+		kuzu_query_summary_destroy(&out_query_summary);
+
+		return 0;
+	}
+
+	kuzu_state stateSuccess2 = kuzu_query_result_get_query_summary(&result, &out_query_summary);
+
+	if (stateSuccess2 != KuzuSuccess) {
+		UtilityFunctions::push_error("KuzuGD ERROR | Query Summary Execution Time - Get Query Summary FAILED");
+
+		//CleanUp
+		kuzu_query_result_destroy(&result);
+		kuzu_query_summary_destroy(&out_query_summary);
+
+		return 0;
+	}
+
+	//Clean Up
+	kuzu_query_result_destroy(&result);
+	kuzu_query_summary_destroy(&out_query_summary);
+
+	return kuzu_query_summary_get_execution_time(&out_query_summary);
 }
 
 /******************************************************************
@@ -489,7 +778,6 @@ void KuzuGD::string_to_tm(const string &time_str, ParsedTime &timeStruct) {
 		nanoseconds = stoll(nano_str);
 	} else if (regex_match(time_str, timestamp_tz_regex)) {
 		ss >> out_tm.tm_year >> dash1 >> out_tm.tm_mon >> dash2 >> out_tm.tm_mday >> space >> out_tm.tm_hour >> dash1 >> out_tm.tm_min >> dash2 >> out_tm.tm_sec >> space >> tz_offset_str;
-
 		char sign = tz_offset_str[0];
 		int tz_hour = stoi(tz_offset_str.substr(1, 2));
 		int tz_minute = stoi(tz_offset_str.substr(4, 2));
@@ -590,6 +878,16 @@ void KuzuGD::_bind_methods() {
 
 	/********************************************
 
+		Management Functions
+
+	********************************************/
+
+	ClassDB::bind_method(D_METHOD("query_timeout", "timeout_millis"), &KuzuGD::query_timeout);
+
+	ClassDB::bind_method(D_METHOD("interrupt_connection"), &KuzuGD::interrupt_connection);
+
+	/********************************************
+
 		Initialization
 
 	********************************************/
@@ -611,5 +909,18 @@ void KuzuGD::_bind_methods() {
 	********************************************/
 
 	ClassDB::bind_method(D_METHOD("execute_query", "query"), &KuzuGD::execute_query);
+
 	ClassDB::bind_method(D_METHOD("execute_prepared_query", "query", "params"), &KuzuGD::execute_prepared_query);
+
+	ClassDB::bind_method(D_METHOD("query_columns_count", "query"), &KuzuGD::query_columns_count);
+
+	ClassDB::bind_method(D_METHOD("query_column_name", "query", "colIndex"), &KuzuGD::query_column_name);
+
+	ClassDB::bind_method(D_METHOD("query_column_data_type", "query", "colIndex"), &KuzuGD::query_column_data_type);
+
+	ClassDB::bind_method(D_METHOD("query_num_tuples", "query"), &KuzuGD::query_num_tuples);
+
+	ClassDB::bind_method(D_METHOD("query_summary_compile_time", "query"), &KuzuGD::query_summary_compile_time);
+
+	ClassDB::bind_method(D_METHOD("query_summary_execution_time", "query"), &KuzuGD::query_summary_execution_time);
 }

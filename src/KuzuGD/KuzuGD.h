@@ -129,6 +129,18 @@ public:
 			params["username"] = "John";  // STRING
 	*/
 	Array execute_prepared_query(const String &query, const Dictionary &params);
+
+	int query_columns_count(const String &query);
+
+	String query_column_name(const String &query, int colIndex);
+
+	String query_column_data_type(const String &query, int colIndex);
+
+	int query_num_tuples(const String &query);
+
+	float query_summary_compile_time(const String &query);
+
+	float query_summary_execution_time(const String &query);
 };
 
 #endif
