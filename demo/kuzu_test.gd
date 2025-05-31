@@ -30,6 +30,7 @@ func _ready():
 	myKuzuDB.execute_query("CREATE (:person {name: 'Bob', age: 40});");
 	
 	var queryResult : Array = myKuzuDB.execute_query("MATCH (p:person) RETURN p.*");
+	print("Test Query Result");
 	print(queryResult);
 
 	#
@@ -44,9 +45,10 @@ func _ready():
 
 	var min_age : int = 18
 	var max_age : int = 30
-
+	
+	
 	var preparedResult : Array = myKuzuDB.execute_prepared_query("MATCH (p:Person) WHERE p.age > $min_age and p.age < $max_age RETURN p.name", {"min_age": min_age, "max_age": max_age});
-
+	print("Test Prepared Query Result");
 	print(preparedResult);
 
 

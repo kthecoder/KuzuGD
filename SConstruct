@@ -64,7 +64,7 @@ Run the following command to download godot-cpp:
 env = SConscript("godot-cpp/SConstruct", {"env": env, "customs": customs})
 
 
-env.Append(CPPPATH=["src/"])
+env.Append(CPPPATH=["src/", "src/Kuzu"])
 # TODO Add Nested Folders as a new Glob
 sources = [Glob("src/*.cpp"), Glob("src/Kuzu/*.cpp"), Glob("src/KuzuGD/*.cpp")]
 

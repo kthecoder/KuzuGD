@@ -1,10 +1,10 @@
 #ifndef KUZUGD_H
 #define KUZUGD_H
 
+#include "kuzu.h"
+
 #include <godot_cpp/classes/node.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
-
-#include <./Kuzu/Kuzu.h>
 
 #include <chrono>
 #include <iomanip>

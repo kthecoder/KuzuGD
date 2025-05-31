@@ -124,13 +124,13 @@ Array KuzuGD::get_config() const {
 
 bool KuzuGD::kuzu_init(const String database_path) {
 	if (database_path.is_empty()) {
-		UtilityFunctions::push_error("KuzuGD Error | Database path is empty");
+		UtilityFunctions::push_error("KuzuGD ERROR | Database path is empty");
 		return false;
 	}
 
 	myKuzuDB = (kuzu_database *)malloc(sizeof(kuzu_database));
 	if (!myKuzuDB) {
-		UtilityFunctions::push_error("KuzuGD Error | Memory allocation failed for KuzuDB Init");
+		UtilityFunctions::push_error("KuzuGD ERROR | Memory allocation failed for KuzuDB Init");
 		return false;
 	}
 	myKuzuDB->_database = nullptr;
@@ -147,7 +147,7 @@ bool KuzuGD::kuzu_init(const String database_path) {
 bool KuzuGD::kuzu_connect(int num_threads) {
 	dbConnection = (kuzu_connection *)malloc(sizeof(kuzu_connection));
 	if (!dbConnection) {
-		UtilityFunctions::push_error("KuzuGD Error | Memory allocation failed for KuzuDB Connect");
+		UtilityFunctions::push_error("KuzuGD ERROR | Memory allocation failed for KuzuDB Connect");
 		return false;
 	}
 	memset(dbConnection, 0, sizeof(kuzu_connection));
@@ -161,15 +161,22 @@ bool KuzuGD::kuzu_connect(int num_threads) {
 		kuzu_connection_set_max_num_thread_for_exec(
 				dbConnection,
 				num_threads);
-	}
+		return state == KuzuSuccess;
 
-	return state == KuzuSuccess;
+	} else {
+		UtilityFunctions::push_error("KuzuGD ERROR | Kuzu Connection FAILED");
+		return state == KuzuError;
+	}
 }
 
 bool KuzuGD::connection_set_max_threads(int num_threads) {
 	kuzu_state state = kuzu_connection_set_max_num_thread_for_exec(
 			dbConnection,
 			num_threads);
+
+	if (state == KuzuError) {
+		UtilityFunctions::push_error("KuzuGD ERROR | Kuzu Set Max Threads FAILED");
+	}
 
 	return state == KuzuSuccess;
 }
@@ -183,6 +190,8 @@ int KuzuGD::connection_get_max_threads() {
 	if (state == KuzuSuccess) {
 		return static_cast<int>(result);
 	} else {
+		UtilityFunctions::push_error("KuzuGD ERROR | FAILED to Obtain Max Num Threads for Connection");
+
 		return -1;
 	}
 }
@@ -201,15 +210,19 @@ Array KuzuGD::execute_query(const String &query) {
 	kuzu_query_result result;
 	kuzu_state state = kuzu_connection_query(dbConnection, query.utf8().get_data(), &result);
 
-	if (state != KuzuSuccess || !&result) {
-		return Array();
-	}
-
 	Array result_array;
+
+	if (state != KuzuSuccess) {
+		char *error_msg = kuzu_query_result_get_error_message(&result);
+
+		UtilityFunctions::push_error("KuzuGD ERROR | Query - " + String(error_msg));
+		result_array.append("ERROR: " + String(error_msg));
+		return result_array;
+	}
 
 	while (true) {
 		kuzu_flat_tuple row;
-		if (kuzu_query_result_get_next(&result, &row) != KuzuSuccess || !&row) {
+		if (kuzu_query_result_get_next(&result, &row) != KuzuSuccess) {
 			break;
 		}
 
@@ -234,7 +247,8 @@ Array KuzuGD::execute_query(const String &query) {
 Array KuzuGD::execute_prepared_query(const String &query, const Dictionary &params) {
 	kuzu_prepared_statement stmt;
 	if (kuzu_connection_prepare(dbConnection, query.utf8().get_data(), &stmt) != KuzuSuccess) {
-		return Array(); // Return empty array if preparation fails
+		UtilityFunctions::push_error("KuzuGD ERROR | Prepared Query - FAILED to prepare query");
+		return Array();
 	}
 
 	// Bind parameters
@@ -242,10 +256,15 @@ Array KuzuGD::execute_prepared_query(const String &query, const Dictionary &para
 		String key = params.keys()[i];
 		Variant value = params.values()[i];
 
-		// Godot does not support the same types as Kuzu
+		//! Godot does not support the same types as Kuzu
 		switch (value.get_type()) {
 			case Variant::INT: {
-				kuzu_prepared_statement_bind_int64(&stmt, key.utf8().get_data(), value.operator int64_t());
+				kuzu_state stateSuccess = kuzu_prepared_statement_bind_int64(&stmt, key.utf8().get_data(), value.operator int64_t());
+
+				if (stateSuccess != KuzuSuccess) {
+					UtilityFunctions::push_error("KuzuGD ERROR | Prepared Query - FAILED to bind INT to Query Parameter");
+				}
+
 				break;
 			}
 
@@ -255,10 +274,18 @@ Array KuzuGD::execute_prepared_query(const String &query, const Dictionary &para
 				if (is_date(string_value)) {
 					kuzu_date_t *kuzuDate = nullptr;
 
-					kuzu_date_from_string(string_value.c_str(), kuzuDate);
-					kuzu_prepared_statement_bind_date(
+					kuzu_state stateSuccess = kuzu_date_from_string(string_value.c_str(), kuzuDate);
+					if (stateSuccess != KuzuSuccess) {
+						UtilityFunctions::push_error("KuzuGD ERROR | Prepared Query - FAILED to convert STRING into Date");
+					}
+
+					kuzu_state stateSuccess2 = kuzu_prepared_statement_bind_date(
 							&stmt, key.utf8().get_data(),
 							*kuzuDate);
+
+					if (stateSuccess2 != KuzuSuccess) {
+						UtilityFunctions::push_error("KuzuGD ERROR | Prepared Query - FAILED to bind Date to Query Parameter");
+					}
 				}
 
 				else if (is_timestamp_tz(string_value)) {
@@ -266,15 +293,19 @@ Array KuzuGD::execute_prepared_query(const String &query, const Dictionary &para
 					string_to_tm(string_value, tmp_time);
 
 					kuzu_timestamp_tz_t kuzu_ts;
-					kuzu_state state = kuzu_timestamp_tz_from_tm(tmp_time.tm_value, &kuzu_ts);
+					kuzu_state stateSuccess = kuzu_timestamp_tz_from_tm(tmp_time.tm_value, &kuzu_ts);
 					kuzu_ts.value += tmp_time.tz_offset_microseconds;
 
-					if (state == KuzuSuccess) {
-						kuzu_prepared_statement_bind_timestamp_tz(
+					if (stateSuccess == KuzuSuccess) {
+						kuzu_state stateSuccess2 = kuzu_prepared_statement_bind_timestamp_tz(
 								&stmt, key.utf8().get_data(),
 								kuzu_ts);
+
+						if (stateSuccess2 != KuzuSuccess) {
+							UtilityFunctions::push_error("KuzuGD ERROR | Prepared Query - FAILED to bind TimeZone TimeStamp to Query Parameter");
+						}
 					} else {
-						UtilityFunctions::print("TimeStamp Format is not a Time Zone");
+						UtilityFunctions::push_error("KuzuGD ERROR | Prepared Query - FAILED Timestamp Format is not a Time Zone");
 					}
 				}
 
@@ -283,56 +314,83 @@ Array KuzuGD::execute_prepared_query(const String &query, const Dictionary &para
 					string_to_tm(string_value, tmp_time);
 
 					kuzu_timestamp_t kuzu_ts;
-					kuzu_state state = kuzu_timestamp_from_tm(tmp_time.tm_value, &kuzu_ts);
+					kuzu_state stateSuccess = kuzu_timestamp_from_tm(tmp_time.tm_value, &kuzu_ts);
 
-					if (state == KuzuSuccess) {
-						kuzu_prepared_statement_bind_timestamp(
+					if (stateSuccess == KuzuSuccess) {
+						kuzu_state stateSuccess2 = kuzu_prepared_statement_bind_timestamp(
 								&stmt, key.utf8().get_data(),
 								kuzu_ts);
+						if (stateSuccess2 != KuzuSuccess) {
+							UtilityFunctions::push_error("KuzuGD ERROR | Prepared Query - FAILED to bind TIMESTAMP to Query Parameter");
+						}
 					} else {
-						UtilityFunctions::print("TimeStamp Format is not a Time Zone");
+						UtilityFunctions::push_error("KuzuGD ERROR | Prepared Query - FAILED Time is not a Timestamp");
 					}
 				}
 
 				else if (is_interval(string_value)) {
-					kuzu_prepared_statement_bind_interval(
+					kuzu_state stateSuccess = kuzu_prepared_statement_bind_interval(
 							&stmt, key.utf8().get_data(),
 							string_to_kuzu_interval(string_value));
+
+					if (stateSuccess != KuzuSuccess) {
+						UtilityFunctions::push_error("KuzuGD ERROR | Prepared Query - FAILED to bind INTERVAL to Query Parameter");
+					}
 				}
 
 				else {
-					kuzu_prepared_statement_bind_string(&stmt, key.utf8().get_data(), string_value.c_str());
+					kuzu_state stateSuccess = kuzu_prepared_statement_bind_string(&stmt, key.utf8().get_data(), string_value.c_str());
+
+					if (stateSuccess != KuzuSuccess) {
+						UtilityFunctions::push_error("KuzuGD ERROR | Prepared Query - FAILED to bind STRING to Query Parameter");
+					}
 				}
 
 				break;
 			}
 
 			case Variant::BOOL: {
-				kuzu_prepared_statement_bind_bool(&stmt, key.utf8().get_data(), value.operator bool());
+				kuzu_state stateSuccess = kuzu_prepared_statement_bind_bool(&stmt, key.utf8().get_data(), value.operator bool());
+
+				if (stateSuccess != KuzuSuccess) {
+					UtilityFunctions::push_error("KuzuGD ERROR | Prepared Query - FAILED to bind BOOL to Query Parameter");
+				}
+
 				break;
 			}
 
 			case Variant::FLOAT: {
-				kuzu_prepared_statement_bind_float(&stmt, key.utf8().get_data(), value.operator float());
+				kuzu_state stateSuccess = kuzu_prepared_statement_bind_float(&stmt, key.utf8().get_data(), value.operator float());
+
+				if (stateSuccess != KuzuSuccess) {
+					UtilityFunctions::push_error("KuzuGD ERROR | Prepared Query - FAILED to bind FLOAT to Query Parameter");
+				}
+
 				break;
 			}
 
 			default:
-				UtilityFunctions::push_error("KuzuGD Error | Prepared Query - Unsupported data type for binding: " + key);
+				UtilityFunctions::push_error("KuzuGD ERROR | Prepared Query - FAILED Unsupported data type for binding: " + key);
 		}
 	}
 
+	Array result_array;
 	// Execute the query
 	kuzu_query_result result;
 	if (kuzu_connection_execute(dbConnection, &stmt, &result) != KuzuSuccess) {
+		char *error_msg = kuzu_prepared_statement_get_error_message(&stmt);
+		UtilityFunctions::push_error("KuzuGD ERROR | Prepared Query - " + String(error_msg));
+
+		result_array.append("ERROR: " + String(error_msg));
+
 		return Array(); // Return empty array if execution fails
 	}
 
 	// Process result
-	Array result_array;
 	while (true) {
 		kuzu_flat_tuple row;
-		if (kuzu_query_result_get_next(&result, &row) != KuzuSuccess || &row == nullptr) {
+		if (kuzu_query_result_get_next(&result, &row) != KuzuSuccess) {
+			UtilityFunctions::print("Breaking");
 			break;
 		}
 
