@@ -1,14 +1,14 @@
 [configuration]
 
 entry_symbol = "kuzugd_init"
-compatibility_minimum = "4.1"
+compatibility_minimum = "4.4"
 
 [libraries]
 ; Relative paths ensure that our GDExtension can be placed anywhere in the project directory.
-macos.single.debug = "./macos/KuzuGD.macos.template_debug.dylib"
-macos.double.debug = "./macos/KuzuGD.macos.template_debug.double.dylib"
-macos.single.release = "./macos/KuzuGD.macos.template_release.dylib"
-macos.double.release = "./macos/KuzuGD.macos.template_debug.double.dylib"
+macos.single.debug = "./macos/libKuzuGD.macos.template_debug.dylib"
+macos.double.debug = "./macos/libKuzuGD.macos.template_debug.double.dylib"
+macos.single.release = "./macos/libKuzuGD.macos.template_release.dylib"
+macos.double.release = "./macos/libKuzuGD.macos.template_debug.double.dylib"
 
 ios.arm64.single.debug = "./ios/KuzuGD.ios.template_debug.arm64.dylib"
 ios.arm64.double.debug = "./ios/KuzuGD.ios.template_debug.arm64.double.dylib"

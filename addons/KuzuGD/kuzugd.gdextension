@@ -1,88 +1,38 @@
 [configuration]
 
 entry_symbol = "kuzugd_init"
-compatibility_minimum = "4.1"
+compatibility_minimum = "4.4"
 
 [libraries]
 ; Relative paths ensure that our GDExtension can be placed anywhere in the project directory.
-macos.single.debug = "res://addons/KuzuGD/macos/KuzuGD.macos.template_debug.dylib"
-macos.double.debug = "res://addons/KuzuGD/macos/KuzuGD.macos.template_debug.double.dylib"
-macos.single.release = "res://addons/KuzuGD/macos/KuzuGD.macos.template_release.dylib"
-macos.double.release = "res://addons/KuzuGD/macos/KuzuGD.macos.template_debug.double.dylib"
+macos.single.debug = "res://addons/KuzuGD/bin/macos/libKuzuGD.macos.template_debug.dylib"
+macos.double.debug = "res://addons/KuzuGD/bin/macos/libKuzuGD.macos.template_debug.double.dylib"
+macos.single.release = "res://addons/KuzuGD/bin/macos/libKuzuGD.macos.template_release.dylib"
+macos.double.release = "res://addons/KuzuGD/bin/macos/libKuzuGD.macos.template_debug.double.dylib"
 
-ios.arm64.single.debug = "res://addons/KuzuGD/ios/KuzuGD.ios.template_debug.arm64.dylib"
-ios.arm64.double.debug = "res://addons/KuzuGD/ios/KuzuGD.ios.template_debug.arm64.double.dylib"
-ios.arm64.single.release = "res://addons/KuzuGD/ios/KuzuGD.ios.template_release.arm64.dylib"
-ios.arm64.double.release = "res://addons/KuzuGD/ios/KuzuGD.ios.template_release.arm64.double.dylib"
+windows.x86_64.single.debug = "res://addons/KuzuGD/bin/windows/KuzuGD.windows.template_debug.x86_64.dll"
+windows.x86_64.double.debug = "res://addons/KuzuGD/bin/windows/KuzuGD.windows.template_debug.double.x86_64.dll"
+windows.x86_64.single.release = "res://addons/KuzuGD/bin/windows/KuzuGD.windows.template_release.x86_64.dll"
+windows.x86_64.double.release = "res://addons/KuzuGD/bin/windows/KuzuGD.windows.template_release.double.x86_64.dll"
 
-windows.x86_32.single.debug = "res://addons/KuzuGD/windows/KuzuGD.windows.template_debug.x86_32.dll"
-windows.x86_32.double.debug = "res://addons/KuzuGD/windows/KuzuGD.windows.template_debug.x86_32.double.dll"
-windows.x86_32.single.release = "res://addons/KuzuGD/windows/KuzuGD.windows.template_release.x86_32.dll"
-windows.x86_32.double.release = "res://addons/KuzuGD/windows/KuzuGD.windows.template_release.x86_32.double.dll"
-
-windows.x86_64.single.debug = "res://addons/KuzuGD/windows/KuzuGD.windows.template_debug.x86_64.dll"
-windows.x86_64.double.debug = "res://addons/KuzuGD/windows/KuzuGD.windows.template_debug.x86_64.double.dll"
-windows.x86_64.single.release = "res://addons/KuzuGD/windows/KuzuGD.windows.template_release.x86_64.dll"
-windows.x86_64.double.release = "res://addons/KuzuGD/windows/KuzuGD.windows.template_release.x86_64.double.dll"
-
-linux.x86_64.single.debug = "res://addons/KuzuGD/linux/libKuzuGD.linux.template_debug.x86_64.so"
-linux.x86_64.double.debug = "res://addons/KuzuGD/linux/libKuzuGD.linux.template_debug.x86_64.double.so"
-linux.x86_64.single.release = "res://addons/KuzuGD/linux/libKuzuGD.linux.template_release.x86_64.so"
-linux.x86_64.double.release = "res://addons/KuzuGD/linux/libKuzuGD.linux.template_release.x86_64.double.so"
-
-linux.arm64.single.debug = "res://addons/KuzuGD/linux/libKuzuGD.linux.template_debug.arm64.so"
-linux.arm64.double.debug = "res://addons/KuzuGD/linux/libKuzuGD.linux.template_debug.arm64.double.so"
-linux.arm64.single.release = "res://addons/KuzuGD/linux/libKuzuGD.linux.template_release.arm64.so"
-linux.arm64.double.release = "res://addons/KuzuGD/linux/libKuzuGD.linux.template_release.arm64.double.so"
-
-android.x86_64.single.debug = "res://addons/KuzuGD/android/KuzuGD.android.template_debug.x86_64.so"
-android.x86_64.double.debug = "res://addons/KuzuGD/android/KuzuGD.android.template_debug.x86_64.double.so"
-android.x86_64.single.release = "res://addons/KuzuGD/android/KuzuGD.android.template_release.x86_64.so"
-android.x86_64.double.release = "res://addons/KuzuGD/android/KuzuGD.android.template_release.x86_64.double.so"
-
-android.arm64.single.debug = "res://addons/KuzuGD/android/KuzuGD.android.template_debug.arm64.so"
-android.arm64.double.debug = "res://addons/KuzuGD/android/KuzuGD.android.template_debug.arm64.double.so"
-android.arm64.single.release = "res://addons/KuzuGD/android/KuzuGD.android.template_release.arm64.so"
-android.arm64.double.release = "res://addons/KuzuGD/android/KuzuGD.android.template_release.arm64.double.so"
+linux.x86_64.single.debug = "res://addons/KuzuGD/bin/linux/libKuzuGD.linux.template_debug.x86_64.so"
+linux.x86_64.double.debug = "res://addons/KuzuGD/bin/linux/libKuzuGD.linux.template_debug.x86_64.double.so"
+linux.x86_64.single.release = "res://addons/KuzuGD/bin/linux/libKuzuGD.linux.template_release.x86_64.so"
+linux.x86_64.double.release = "res://addons/KuzuGD/bin/linux/libKuzuGD.linux.template_release.x86_64.double.so"
 
 [dependencies]
 
-macos.single.debug = "res://addons/KuzuGD/macos/libkuzu.dylib"
-macos.double.debug = "res://addons/KuzuGD/macos/libkuzu.dylib"
-macos.single.release = "res://addons/KuzuGD/macos/libkuzu.dylib"
-macos.double.release = "res://addons/KuzuGD/macos/libkuzu.dylib"
+macos.single.debug = "res://addons/KuzuGD/bin/macos/kuzu/libkuzu.dylib"
+macos.double.debug = "res://addons/KuzuGD/bin/macos/kuzu/libkuzu.dylib"
+macos.single.release = "res://addons/KuzuGD/bin/macos/kuzu/libkuzu.dylib"
+macos.double.release = "res://addons/KuzuGD/bin/macos/kuzu/libkuzu.dylib"
 
-ios.arm64.single.debug = "res://addons/KuzuGD/ios/libkuzu.dylib"
-ios.arm64.double.debug = "res://addons/KuzuGD/ios/libkuzu.dylib"
-ios.arm64.single.release = "res://addons/KuzuGD/ios/libkuzu.dylib"
-ios.arm64.double.release = "res://addons/KuzuGD/ios/libkuzu.dylib"
+windows.x86_64.single.debug = "res://addons/KuzuGD/bin/windows/kuzu/kuzu_shared.dll"
+windows.x86_64.double.debug = "res://addons/KuzuGD/bin/windows/kuzu/kuzu_shared.dll"
+windows.x86_64.single.release = "res://addons/KuzuGD/bin/windows/kuzu/kuzu_shared.dll"
+windows.x86_64.double.release = "res://addons/KuzuGD/bin/windows/kuzu/kuzu_shared.dll"
 
-windows.x86_32.single.debug = "res://addons/KuzuGD/windows/kuzu_shared.dll"
-windows.x86_32.double.debug = "res://addons/KuzuGD/windows/kuzu_shared.dll"
-windows.x86_32.single.release = "res://addons/KuzuGD/windows/kuzu_shared.dll"
-windows.x86_32.double.release = "res://addons/KuzuGD/windows/kuzu_shared.dll"
-
-windows.x86_64.single.debug = "res://addons/KuzuGD/windows/kuzu_shared.dll"
-windows.x86_64.double.debug = "res://addons/KuzuGD/windows/kuzu_shared.dll"
-windows.x86_64.single.release = "res://addons/KuzuGD/windows/kuzu_shared.dll"
-windows.x86_64.double.release = "res://addons/KuzuGD/windows/kuzu_shared.dll"
-
-linux.x86_64.single.debug = "res://addons/KuzuGD/linux/libkuzu_x86_64.so"
-linux.x86_64.double.debug = "res://addons/KuzuGD/linux/libkuzu_x86_64.so"
-linux.x86_64.single.release = "res://addons/KuzuGD/linux/libkuzu_x86_64.so"
-linux.x86_64.double.release = "res://addons/KuzuGD/linux/libkuzu_x86_64.so"
-
-linux.arm64.single.debug = "res://addons/KuzuGD/linux/libkuzu_aarch64.so"
-linux.arm64.double.debug = "res://addons/KuzuGD/linux/libkuzu_aarch64.so"
-linux.arm64.single.release = "res://addons/KuzuGD/linux/libkuzu_aarch64.so"
-linux.arm64.double.release = "res://addons/KuzuGD/linux/libkuzu_aarch64.so"
-
-android.x86_64.single.debug = "res://addons/KuzuGD/android/libkuzu.so"
-android.x86_64.double.debug = "res://addons/KuzuGD/android/libkuzu.so"
-android.x86_64.single.release = "res://addons/KuzuGD/android/libkuzu.so"
-android.x86_64.double.release = "res://addons/KuzuGD/android/libkuzu.so"
-
-android.arm64.single.debug = "res://addons/KuzuGD/android/libkuzu.so"
-android.arm64.double.debug = "res://addons/KuzuGD/android/libkuzu.so"
-android.arm64.single.release = "res://addons/KuzuGD/android/libkuzu.so"
-android.arm64.double.release = "res://addons/KuzuGD/android/libkuzu.so"
+linux.x86_64.single.debug = "res://addons/KuzuGD/bin/linux/kuzu/libkuzu_x86_64.so"
+linux.x86_64.double.debug = "res://addons/KuzuGD/bin/linux/kuzu/libkuzu_x86_64.so"
+linux.x86_64.single.release = "res://addons/KuzuGD/bin/linux/kuzu/libkuzu_x86_64.so"
+linux.x86_64.double.release = "res://addons/KuzuGD/bin/linux/kuzu/libkuzu_x86_64.so"
