@@ -1,112 +1,147 @@
-# name: Build GDExtension
-# on:
-#   workflow_call:
-#   push:
-#   pull_request:
-#   merge_group:
+name: Build GDExtension
+on:
+  workflow_call:
+  push:
+  pull_request:
+  merge_group:
 
-# jobs:
-#   build:
-#     strategy:
-#       fail-fast: false
-#       matrix:
-#         # A build is made for every possible combination of parameters
-#         # You can add or remove entries from the arrays of each parameter to custimize which builds you want to run
-#         # See https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/running-variations-of-jobs-in-a-workflow
-#         target:
-#           [
-#             { platform: linux, arch: x86_64, os: ubuntu-22.04 },
-#             { platform: windows, arch: x86_64, os: windows-latest },
-#             { platform: windows, arch: x86_32, os: windows-latest },
-#             { platform: macos, arch: universal, os: macos-latest },
-#             { platform: android, arch: arm64, os: ubuntu-22.04 },
-#             { platform: android, arch: arm32, os: ubuntu-22.04 },
-#             { platform: android, arch: x86_64, os: ubuntu-22.04 },
-#             { platform: android, arch: x86_32, os: ubuntu-22.04 },
-#             { platform: ios, arch: arm64, os: macos-latest },
-#             { platform: web, arch: wasm32, os: ubuntu-22.04 }
-#           ]
-#         target-type: [template_debug]
-#         float-precision: [single, double]
-#         include: # Also build a release version for these specific targets. Remove if you add template_release above.
-#           - target: { platform: linux, arch: x86_64, os: ubuntu-22.04 }
-#             target-type: template_release
-#             float-precision: single
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        # A build is made for every possible combination of parameters
+        # You can add or remove entries from the arrays of each parameter to customize which builds you want to run
+        # See https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/running-variations-of-jobs-in-a-workflow
+        target: [
+            { platform: linux, arch: x86_64, os: ubuntu-22.04 },
+            { platform: linux, arch: aarch64, os: ubuntu-22.04 },
+            { platform: windows, arch: x86_64, os: windows-latest },
+            { platform: windows, arch: x86_32, os: windows-latest },
+            { platform: macos, arch: universal, os: macos-latest },
+            # { platform: android, arch: arm64, os: ubuntu-22.04 },
+            # { platform: android, arch: arm32, os: ubuntu-22.04 },
+            # { platform: android, arch: x86_64, os: ubuntu-22.04 },
+            # { platform: android, arch: x86_32, os: ubuntu-22.04 },
+            # { platform: ios, arch: arm64, os: macos-latest },
+            # { platform: web, arch: wasm32, os: ubuntu-22.04 },
+          ]
+        target-type: [template_release, template_debug]
+        float-precision: [single, double]
+        # include: # Also build a release version for these specific targets. Remove if you add template_release above.
+        #   - target: { platform: linux, arch: x86_64, os: ubuntu-22.04 }
+        #     target-type: template_release
+        #     float-precision: single
 
-#           - target: { platform: linux, arch: x86_64, os: ubuntu-22.04 }
-#             target-type: template_release
-#             float-precision: double
+        #   - target: { platform: linux, arch: x86_64, os: ubuntu-22.04 }
+        #     target-type: template_release
+        #     float-precision: double
 
-#     runs-on: ${{ matrix.target.os }}
-#     steps:
-#       # Clone this repository
-#       - name: Checkout
-#         uses: actions/checkout@v4
-#         with:
-#           submodules: true
+    runs-on: ${{ matrix.target.os }}
+    steps:
+      # Clone this repository
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
 
-#       # Lint
-#       #- name: Setup clang-format
-#       #  shell: bash
-#       #  run: |
-#       #    python -m pip install clang-format
-#       #- name: Run clang-format
-#       #  shell: bash
-#       #  run: |
-#       #    clang-format src/** --dry-run --Werror
+      # Lint
+      #- name: Setup clang-format
+      #  shell: bash
+      #  run: |
+      #    python -m pip install clang-format
+      #- name: Run clang-format
+      #  shell: bash
+      #  run: |
+      #    clang-format src/** --dry-run --Werror
 
-#       # Setup dependencies
-#       - name: Setup godot-cpp
-#         uses: ./godot-cpp/.github/actions/setup-godot-cpp
-#         with:
-#           platform: ${{ matrix.target.platform }}
-#           em-version: 3.1.62
+      # Get the Kuzu Binaries
+      - name: Download Kuzu Binaries
+        run: |
+          case ${{ matrix.target.platform }} in
+          linux)
+              KUZU_URL="https://github.com/kuzudb/kuzu/releases/download/v0.10.0/libkuzu-linux-${{ matrix.target.arch }}.tar.gz"
+              ;;
+          windows)
+              KUZU_URL="https://github.com/kuzudb/kuzu/releases/download/v0.10.0/libkuzu-windows-x86_64.zip"
+              ;;
+          macos)
+              KUZU_URL="https://github.com/kuzudb/kuzu/releases/download/v0.10.0/libkuzu-osx-universal.tar.gz"
+              ;;
+          android)
+              KUZU_URL="https://github.com/kuzudb/kuzu/releases/download/v0.10.0/libkuzu-android-armv8a.tar.gz"
+              ;;
+          *)
+              echo "Unsupported platform: ${{ matrix.target.platform }}"
+              exit 1
+              ;;
+          esac
 
-#       # Build GDExtension (with caches)
+          curl -L -o kuzu_binary.tar.gz "$KUZU_URL"
 
-#       - name: Restore .scons_cache
-#         uses: ./godot-cpp/.github/actions/godot-cache-restore
-#         with:
-#           scons-cache: ${{ github.workspace }}/.scons-cache/
-#           cache-name: ${{ matrix.target.platform }}_${{ matrix.target.arch }}_${{ matrix.float-precision }}_${{ matrix.target-type }}
+      - name: Extract Kuzu Binaries
+        run: |
+          if [[ "${{ matrix.target.platform }}" == "windows" ]]; then
+          unzip kuzu_binary.tar.gz -d ${{ github.workspace }}/bin/${{ matrix.target.platform }}/kuzu/
+          else
+          tar -xvzf kuzu_binary.tar.gz -C ${{ github.workspace }}/bin/${{ matrix.target.platform }}/kuzu/
+          fi
+      - name: Verify Kuzu Binaries
+        run: |
+          ls -l ${{ github.workspace }}/bin/${{ matrix.target.platform }}/kuzu/
 
-#       - name: Build GDExtension Debug Build
-#         shell: sh
-#         env:
-#           SCONS_CACHE: ${{ github.workspace }}/.scons-cache/
-#         run: |
-#           scons target=${{ matrix.target-type }} platform=${{ matrix.target.platform }} arch=${{ matrix.target.arch }} precision=${{ matrix.float-precision }}
+      # Setup dependencies
+      - name: Setup godot-cpp
+        uses: ./godot-cpp/.github/actions/setup-godot-cpp
+        with:
+          platform: ${{ matrix.target.platform }}
+          em-version: 3.1.62
 
-#       - name: Save .scons_cache
-#         uses: ./godot-cpp/.github/actions/godot-cache-save
-#         with:
-#           scons-cache: ${{ github.workspace }}/.scons-cache/
-#           cache-name: ${{ matrix.target.platform }}_${{ matrix.target.arch }}_${{ matrix.float-precision }}_${{ matrix.target-type }}
+      # Build GDExtension (with caches)
 
-#       # Clean up compilation files
-#       - name: Windows - Delete compilation files
-#         if: ${{ matrix.target.platform == 'windows' }}
-#         shell: pwsh
-#         run: |
-#           Remove-Item bin/* -Include *.exp,*.lib,*.pdb -Force
+      - name: Restore .scons_cache
+        uses: ./godot-cpp/.github/actions/godot-cache-restore
+        with:
+          scons-cache: ${{ github.workspace }}/.scons-cache/
+          cache-name: ${{ matrix.target.platform }}_${{ matrix.target.arch }}_${{ matrix.float-precision }}_${{ matrix.target-type }}
 
-#       # Upload the build
-#       - name: Upload Artifact
-#         uses: actions/upload-artifact@v4
-#         with:
-#           name: godot-cpp-template-${{ matrix.target.platform }}-${{ matrix.target.arch }}-${{ matrix.float-precision }}-${{ matrix.target-type }}
-#           path: |
-#             ${{ github.workspace }}/bin/**
+      - name: Build GDExtension Release Build
+        shell: sh
+        env:
+          SCONS_CACHE: ${{ github.workspace }}/.scons-cache/
+        run: |
+          scons target=${{ matrix.target-type }} production=${{ matrix.target-type == 'template_release' && 'yes' || 'no' }} debug_symbols=${{ matrix.target-type == 'template_debug' && 'yes' || 'no' }} platform=${{ matrix.target.platform }} arch=${{ matrix.target.arch }} precision=${{ matrix.float-precision }}
 
-#   # Merges all the build artifacts together into a single godot-cpp-template artifact.
-#   # If you comment out this step, all the builds will be uploaded individually.
-#   merge:
-#     runs-on: ubuntu-22.04
-#     needs: build
-#     steps:
-#       - name: Merge Artifacts
-#         uses: actions/upload-artifact/merge@v4
-#         with:
-#           name: godot-cpp-template
-#           pattern: godot-cpp-template-*
-#           delete-merged: true
+      - name: Save .scons_cache
+        uses: ./godot-cpp/.github/actions/godot-cache-save
+        with:
+          scons-cache: ${{ github.workspace }}/.scons-cache/
+          cache-name: ${{ matrix.target.platform }}_${{ matrix.target.arch }}_${{ matrix.float-precision }}_${{ matrix.target-type }}
+
+      # Clean up compilation files
+      - name: Windows - Delete compilation files
+        if: ${{ matrix.target.platform == 'windows' }}
+        shell: pwsh
+        run: |
+          Remove-Item bin/* -Include *.exp,*.lib,*.pdb -Force
+
+      # Upload the build
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kuzugd-${{ matrix.target.platform }}-${{ matrix.target.arch }}-${{ matrix.float-precision }}-${{ matrix.target-type }}
+          path: |
+            ${{ github.workspace }}/bin/**
+
+  # Merges all the build artifacts together into a single kuzugd artifact.
+  # If you comment out this step, all the builds will be uploaded individually.
+  merge:
+    runs-on: ubuntu-22.04
+    needs: build
+    steps:
+      - name: Merge Artifacts
+        uses: actions/upload-artifact/merge@v4
+        with:
+          name: kuzugd
+          pattern: kuzugd-*
+          delete-merged: true

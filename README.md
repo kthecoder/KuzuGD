@@ -1,4 +1,4 @@
-![Banner](Documentation/Assets/banner.jpg)
+![Banner](Documentation/Assets/banner.png)
 
 # Kuzu Godot
 
