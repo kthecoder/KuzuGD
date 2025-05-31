@@ -390,7 +390,6 @@ Array KuzuGD::execute_prepared_query(const String &query, const Dictionary &para
 	while (true) {
 		kuzu_flat_tuple row;
 		if (kuzu_query_result_get_next(&result, &row) != KuzuSuccess) {
-			UtilityFunctions::print("Breaking");
 			break;
 		}
 
