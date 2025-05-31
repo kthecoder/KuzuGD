@@ -82,18 +82,27 @@ jobs:
 
           curl -L -o kuzu_binary.tar.gz "$KUZU_URL"
 
-      - name: Extract Kuzu Binaries
+      - name: Extract Kuzu Binaries (Linux)
+        if: ${{ matrix.target.platform == 'linux' }}
+        shell: bash
         run: |
-          if [[ "${{ matrix.target.platform }}" == "windows" ]]; then
-            unzip kuzu_binary.tar.gz -d ${{ github.workspace }}/bin/${{ matrix.target.platform }}/kuzu/
-          else if [[ "${{ matrix.target.platform }}" == "linux" ]]; then
-            tar -xvzf kuzu_binary.tar.gz -C ${{ github.workspace }}/bin/${{ matrix.target.platform }}/kuzu/
-            # Rename only for Linux platforms
-            mv ${{ github.workspace }}/bin/${{ matrix.target.platform }}-${{ matrix.target.arch }}-${{ matrix.float-precision }}-${{ matrix.target-type }}/kuzu/libkuzu.so \
-              ${{ github.workspace }}/bin/${{ matrix.target.platform }}-${{ matrix.target.arch }}-${{ matrix.float-precision }}-${{ matrix.target-type }}/kuzu/libkuzu_${{ matrix.target.arch }}.so
-          else
-            tar -xvzf kuzu_binary.tar.gz -C ${{ github.workspace }}/bin/${{ matrix.target.platform }}/kuzu/
-          fi
+          tar -xvzf kuzu_binary.tar.gz -C ${{ github.workspace }}/bin/${{ matrix.target.platform }}/kuzu/
+          # Rename only for Linux platforms
+          mv ${{ github.workspace }}/bin/${{ matrix.target.platform }}-${{ matrix.target.arch }}-${{ matrix.float-precision }}-${{ matrix.target-type }}/kuzu/libkuzu.so \
+             ${{ github.workspace }}/bin/${{ matrix.target.platform }}-${{ matrix.target.arch }}-${{ matrix.float-precision }}-${{ matrix.target-type }}/kuzu/libkuzu_${{ matrix.target.arch }}.so
+
+      - name: Extract Kuzu Binaries (macOS)
+        if: ${{ matrix.target.platform == 'macos' }}
+        shell: bash
+        run: |
+          tar -xvzf kuzu_binary.tar.gz -C ${{ github.workspace }}/bin/${{ matrix.target.platform }}/kuzu/
+          # No renaming needed for macOS
+
+      - name: Extract Kuzu Binaries (Windows)
+        if: ${{ matrix.target.platform == 'windows' }}
+        shell: pwsh
+        run: |
+          Expand-Archive -Path kuzu_binary.tar.gz -DestinationPath "${{ github.workspace }}\bin\windows\kuzu\"
 
       - name: Verify Kuzu Binaries
         run: |
