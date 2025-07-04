@@ -48,3 +48,7 @@ print(queryResult);
 ## Building from Source
 
 Requires the Kuzu Binaries in the `bin/<platform>/kuzu` folders, pythons Scons, Godot, g++ compiler.
+
+# Contributing
+
+Any and all Contributions are subject to the [CLA.md](https://github.com/kthecoder/KuzuGD/blob/main/CLA.md)
