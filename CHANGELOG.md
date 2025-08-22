@@ -1,3 +1,7 @@
+# 0.11.2
+
+Upgrade to Kuzu 0.11.2
+
 # 0.10.0
 
 Initial Setup

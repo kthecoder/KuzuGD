@@ -15,6 +15,7 @@ void initialize_gdextension_types(ModuleInitializationLevel p_level) {
 	}
 	//TODO GDREGISTER_CLASS(YourClass);
 	GDREGISTER_CLASS(KuzuGD);
+	GDREGISTER_CLASS(GDPreparedStatement);
 }
 
 void uninitialize_gdextension_types(ModuleInitializationLevel p_level) {

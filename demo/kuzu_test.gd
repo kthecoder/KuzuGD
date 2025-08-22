@@ -11,14 +11,15 @@ func _ready():
 	if success_db:
 		print("Database initialized successfully!");
 	else:
-		print("Failed to initialize database.");
+		print("KuzuGD ERROR | Failed to initialize database.");
 
+	# Kuzu Connection must be established before you can run any queries are connection related functions
 	var success_connect = myKuzuDB.kuzu_connect(1);
 
 	if success_connect:
 		print("Database Connection Established!");
 	else:
-		print("Failed to create a connection to the database.");
+		print("KuzuGD ERROR | Failed to create a connection to the database.");
 
 	#
 	# Validate Simple queries
@@ -73,3 +74,32 @@ func _ready():
 	#	Breaking
 	#	Test Prepared Query Result
 	#	[{ "p.name": "Jessica" }]
+
+
+	#
+	#
+	#	Testing Prepare Queries
+	#
+	#
+
+	var stmt = KuzuGD.prepare_statement("MATCH (p:Person) WHERE p.age > $min_age RETURN p.name, p.age")
+	var results = KuzuGD.execute_prepared(stmt, {"min_age": 30})
+	for row in results:
+		print(row["p.name"], row["p.age"])
+
+	# Test prepare_with_params
+	var stmt = KuzuGD.prepare_with_params(
+		"MATCH (p:Person) USING INDEX p.name = $name RETURN p",
+		{"name": "Alice"}
+	)
+
+	var results = KuzuGD.execute_prepared(stmt, {})
+	for row in results:
+		print(row)
+
+	# Test Query Summary 
+
+	var result = kuzu.query_result("MATCH (n) RETURN n")
+	print(result.get_summary().get_execution_time())
+	for row in result.to_array():
+		print(row)

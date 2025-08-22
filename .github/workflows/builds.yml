@@ -60,19 +60,19 @@
 #         run: |
 #           case "${{ matrix.target.platform }}-${{ matrix.target.arch }}" in
 #             linux-x86_64)
-#               KUZU_URL="https://github.com/kuzudb/kuzu/releases/download/v0.10.0/libkuzu-linux-x86_64.tar.gz"
+#               KUZU_URL="https://github.com/kuzudb/kuzu/releases/download/v0.11.2/libkuzu-linux-x86_64.tar.gz"
 #               ;;
 #             linux-aarch64)
-#               KUZU_URL="https://github.com/kuzudb/kuzu/releases/download/v0.10.0/libkuzu-linux-aarch64.tar.gz"
+#               KUZU_URL="https://github.com/kuzudb/kuzu/releases/download/v0.11.2/libkuzu-linux-aarch64.tar.gz"
 #               ;;
 #             windows-x86_64)
-#               KUZU_URL="https://github.com/kuzudb/kuzu/releases/download/v0.10.0/libkuzu-windows-x86_64.zip"
+#               KUZU_URL="https://github.com/kuzudb/kuzu/releases/download/v0.11.2/libkuzu-windows-x86_64.zip"
 #               ;;
 #             macos-universal)
-#               KUZU_URL="https://github.com/kuzudb/kuzu/releases/download/v0.10.0/libkuzu-osx-universal.tar.gz"
+#               KUZU_URL="https://github.com/kuzudb/kuzu/releases/download/v0.11.2/libkuzu-osx-universal.tar.gz"
 #               ;;
 #             android-armv8a)
-#               KUZU_URL="https://github.com/kuzudb/kuzu/releases/download/v0.10.0/libkuzu-android-armv8a.tar.gz"
+#               KUZU_URL="https://github.com/kuzudb/kuzu/releases/download/v0.11.2/libkuzu-android-armv8a.tar.gz"
 #               ;;
 #             *)
 #               echo "Unsupported platform: ${{ matrix.target.platform }}-${{ matrix.target.arch }}"
